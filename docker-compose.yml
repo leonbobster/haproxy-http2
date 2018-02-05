@@ -1,0 +1,36 @@
+version: "3"
+services:
+  web:
+    build:
+      context: ./web-build
+      dockerfile: Dockerfile
+    volumes:
+      - ./web:/var/www/html
+      - ./web-hosts:/etc/apache2/sites-enabled
+      - ./cert:/etc/cert
+#    ports:
+#      - 8888:80
+#      - 443:443
+
+  varnish:
+    image: million12/varnish 
+    volumes:
+      - ./varnish:/etc/varnish
+#    ports:
+#      - 80:80
+    links:
+      - web:backend-host
+    environment:
+      VCL_CONFIG: /etc/varnish/varnish.vcl
+
+  haproxy:
+    build:
+      context: ./haproxy
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./cert:/etc/cert
+    links:
+      - varnish:varnish-host
